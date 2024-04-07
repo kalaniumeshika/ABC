@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Medical Records</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="text"], input[type="date"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 6px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<h1>Medical Records</h1>
+
+<table id="medicalTable">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Date & Time</th>
+        <th>Doctor</th>
+    </tr>
+    </thead>
+    <tbody id="medicalTableBody">
+    <!-- Medical records will be dynamically added here -->
+    </tbody>
+</table>
+
+<h2>Add New Medical Record</h2>
+<form id="addMedicalForm">
+    <label for="mid">ID:</label><br>
+    <input type="text" id="mid" name="mid"><br>
+
+    <label for="mname">Name:</label><br>
+    <input type="text" id="mname" name="mname"><br>
+
+    <label for="DateTime">Date & Time:</label><br>
+    <input type="date" id="DateTime" name="DateTime"><br>
+
+    <label for="Doctor">Doctor:</label><br>
+    <input type="text" id="Doctor" name="Doctor"><br><br>
+
+    <button type="submit">Add Medical Record</button>
+</form>
+
+<script>
+    // Function to fetch medical records from the server and populate the table
+    function fetchMedicalRecords() {
+        fetch('http://localhost:8082/medical')
+            .then(response => response.json())
+            .then(data => {
+                const medicalTableBody = document.getElementById('medicalTableBody');
+                medicalTableBody.innerHTML = ''; // Clear previous table data
+
+                data.forEach(medical => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${medical.mid}</td>
+                        <td>${medical.mname}</td>
+                        <td>${medical.DateTime}</td>
+                        <td>${medical.Doctor}</td>
+                    `;
+                    medicalTableBody.appendChild(row);
+                });
+            })
+            .catch(error => console.error('Error fetching medical records:', error));
+    }
+
+    // Call the function when the page loads
+    window.onload = fetchMedicalRecords;
+
+    // Function to display alert message for successful addition
+    function showAlert() {
+        alert("Test added successfully");
+    }
+
+    // Add event listener to the form submission
+    document.getElementById('addMedicalForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        const formData = new FormData(this); // Get form data
+
+        // Send POST request to add new medical record
+        fetch('http://localhost:8082/medical', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(Object.fromEntries(formData.entries())) // Convert form data to JSON
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to add medical record.');
+            }
+            return response.text(); // Parse response body as text
+        })
+        .then(data => {
+            showAlert(); // Show success message
+            this.reset(); // Reset the form
+            fetchMedicalRecords(); // Refresh the table
+        })
+                .catch(error => {
+            console.error('Error adding medical record:', error);
+            alert('Failed to add medical record. Please try again.'); // Show error message
+        });
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Medical Records</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+            background-color: #fff;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        form {
+            max-width: 400px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        label {
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input[type="text"],
+        input[type="date"] {
+            width: calc(100% - 16px);
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        button[type="submit"] {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .left {
+            width: 60%;
+        }
+
+        .right {
+            width: 35%;
+        }
+    </style>
+</head>
+<body>
+<h2>Medical Records</h2>
+<table id="medicalTable">
+    <thead>
+    <tr>
+        <th>Medical ID</th>
+        <th>Name</th>
+        <th>Date & Time</th>
+        <th>Doctor</th>
+    </tr>
+    </thead>
+    <tbody id="medicalTableBody">
+    <!-- Medical records will be dynamically added here -->
+    </tbody>
+</table>
+
+<h2>Appointment Form</h2>
+<form id="appointmentForm">
+    <label for="id">ID:</label><br>
+    <input type="text" id="id" name="id"><br>
+
+    <label for="patientname">Patient Name:</label><br>
+    <input type="text" id="patientname" name="patientname"><br>
+
+    <label for="labtest">Lab Test:</label><br>
+    <input type="text" id="labtest" name="labtest"><br>
+
+    <label for="Date">Date:</label><br>
+    <input type="date" id="Date" name="Date"><br>
+
+    <label for="payment">Payment:</label><br>
+    <input type="text" id="payment" name="payment"><br><br>
+
+    <button type="submit">Submit</button>
+</form>
+
+<script>
+    document.getElementById('appointmentForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        const formData = new FormData(this); // Get form data
+
+        // Send POST request to the endpoint
+        fetch('http://localhost:8082/appointments', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(Object.fromEntries(formData.entries())) // Convert form data to JSON
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to add appointment.');
+            }
+            return response.text(); // Parse response body as text
+        })
+        .then(data => {
+            alert(data); // Show success message
+            this.reset(); // Reset the form
+        })
+        .catch(error => {
+            alert(error.message); // Show error message
+        });
+    });
+</script>
+<script>
+    // Function to fetch medical records from the server and populate the table
+    function fetchMedicalRecords() {
+        fetch('http://localhost:8082/medical')
+            .then(response => response.json())
+            .then(data => {
+                const medicalTableBody = document.getElementById('medicalTableBody');
+                medicalTableBody.innerHTML = ''; // Clear previous table data
+
+                data.forEach(medical => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${medical.mid}</td>
+                        <td>${medical.mname}</td>
+                        <td>${medical.dateTime}</td>
+                        <td>${medical.doctor}</td>
+                    `;
+                    medicalTableBody.appendChild(row);
+                });
+            })
+            .catch(error => console.error('Error fetching medical records:', error));
+    }
+
+    // Call the function when the page loads
+    window.onload = fetchMedicalRecords;
+</script>
+</body>
+</html>
